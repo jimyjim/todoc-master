@@ -16,11 +16,12 @@ import com.cleanup.todoc.database.dao.TaskDao;
 import com.cleanup.todoc.model.Project;
 import com.cleanup.todoc.model.Task;
 
+import java.util.concurrent.Executors;
+
 @Database(entities = {Project.class, Task.class}, version = 1, exportSchema = false)
 public abstract class TodocDatabase extends RoomDatabase {
 
     private static volatile TodocDatabase INSTANCE;
-
     public abstract TaskDao taskDao();
     public abstract ProjectDao projectDao();
 
@@ -28,7 +29,6 @@ public abstract class TodocDatabase extends RoomDatabase {
         if (INSTANCE == null){
             synchronized (TodocDatabase.class){
                 if (INSTANCE == null){
-                    Log.e("error", "1");
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),TodocDatabase.class, "sqlData").addCallback(prepopulateDatabase()).fallbackToDestructiveMigration().build();
                 }
             }
@@ -36,36 +36,39 @@ public abstract class TodocDatabase extends RoomDatabase {
         return INSTANCE;
     }
 
-
-    private static Callback prepopulateDatabase(){
-        Log.e("error", "2");
-
+    private static Callback prepopulateDatabase() {
         return new Callback() {
+
             @Override
-            public void onCreate(@NonNull SupportSQLiteDatabase db) {
+            public void onCreate(@NonNull final SupportSQLiteDatabase db) {
                 super.onCreate(db);
-                Log.e("error", "3");
-                ContentValues contentValues = new ContentValues();
-                contentValues.put("id", 1L);
-                contentValues.put("name", "Projet Tartampion");
-                contentValues.put("color", 0xFFEADAD1);
-                db.insert("Project", OnConflictStrategy.IGNORE, contentValues);
+                Executors.newSingleThreadScheduledExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        //project
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put("id", 1L);
+                        contentValues.put("name", "Projet Tartampion");
+                        contentValues.put("color", 0xFFEADAD1);
+                        db.insert("Project", OnConflictStrategy.IGNORE, contentValues);
 
-                contentValues = new ContentValues();
-                contentValues.put("id", 2L);
-                contentValues.put("name", "Projet Lucidia");
-                contentValues.put("color", 0xFFB4CDBA);
-                db.insert("Project", OnConflictStrategy.IGNORE, contentValues);
+                        contentValues.put("id", 2L);
+                        contentValues.put("name", "Projet Lucidia");
+                        contentValues.put("color", 0xFFB4CDBA);
+                        db.insert("Project", OnConflictStrategy.IGNORE, contentValues);
 
-                contentValues = new ContentValues();
-                contentValues.put("id", 3L);
-                contentValues.put("name", "Projet Circus");
-                contentValues.put("color", 0xFFA3CED2);
-                db.insert("Project", OnConflictStrategy.IGNORE, contentValues);
-
+                        contentValues.put("id", 3L);
+                        contentValues.put("name", "Projet Circus");
+                        contentValues.put("color", 0xFFA3CED2);
+                        db.insert("Project", OnConflictStrategy.IGNORE, contentValues);
+                    }
+                });
 
             }
         };
+
     }
 
+
 }
+

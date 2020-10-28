@@ -1,7 +1,11 @@
 package com.cleanup.todoc.ui;
 
+import android.arch.lifecycle.LifecycleOwner;
+import android.arch.lifecycle.Observer;
+import android.content.Context;
 import android.content.res.ColorStateList;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.AppCompatImageView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -10,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.cleanup.todoc.R;
+import com.cleanup.todoc.database.TodocDatabase;
 import com.cleanup.todoc.model.Project;
 import com.cleanup.todoc.model.Task;
 
@@ -21,6 +26,9 @@ import java.util.List;
  * @author Gaëtan HERFRAY
  */
 public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHolder> {
+
+    private Context context;
+    private LifecycleOwner owner;
     /**
      * The list of tasks the adapter deals with
      */
@@ -38,8 +46,10 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
      *
      * @param tasks the list of tasks the adapter deals with to set
      */
-    TasksAdapter(@NonNull final List<Task> tasks, @NonNull final DeleteTaskListener deleteTaskListener) {
+    TasksAdapter(@NonNull final List<Task> tasks, @NonNull final DeleteTaskListener deleteTaskListener, Context context, LifecycleOwner owner) {
         this.tasks = tasks;
+        this.context = context;
+        this.owner = owner;
         this.deleteTaskListener = deleteTaskListener;
     }
 
@@ -149,15 +159,20 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
             lblTaskName.setText(task.getName());
             imgDelete.setTag(task);
 
-            final Project taskProject = task.getProject();
-            if (taskProject != null) {
-                imgProject.setSupportImageTintList(ColorStateList.valueOf(taskProject.getColor()));
-                lblProjectName.setText(taskProject.getName());
-            } else {
-                imgProject.setVisibility(View.INVISIBLE);
-                lblProjectName.setText("");
-            }
 
+            TodocDatabase database = TodocDatabase.getInstance(context);;
+            database.projectDao().getProject(task.getProjectId()).observe(owner, new Observer<Project>() {
+                @Override
+                public void onChanged(@Nullable Project project) {
+                    if (project != null) {
+                        imgProject.setSupportImageTintList(ColorStateList.valueOf(project.getColor()));
+                        lblProjectName.setText(project.getName());
+                    } else {
+                        imgProject.setVisibility(View.INVISIBLE);
+                        lblProjectName.setText("");
+                    }
+                }
+            });
         }
     }
 }

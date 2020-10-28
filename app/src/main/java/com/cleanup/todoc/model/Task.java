@@ -86,10 +86,10 @@ public class Task {
      *
      * @return the project associated to the task
      */
-    @Nullable
+    /*@Nullable
     public Project getProject() {
         return Project.getProjectById(projectId);
-    }
+    }*/
 
     @Nullable
     public long getProjectId() {

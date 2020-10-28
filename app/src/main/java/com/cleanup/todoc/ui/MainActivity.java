@@ -10,6 +10,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import pub.devrel.easypermissions.EasyPermissions;
 
@@ -57,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
     /**
      * The adapter which handles the list of tasks
      */
-    private final TasksAdapter adapter = new TasksAdapter(tasks, this);
+    private final TasksAdapter adapter = new TasksAdapter(tasks, this, this, this);
 
     /**
      * The sort method to be used to display tasks
@@ -115,7 +117,6 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
 
         listTasks = findViewById(R.id.list_tasks);
@@ -139,7 +140,8 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
     }
 
     public void readDataBase() {
-        database = Room.databaseBuilder(this,TodocDatabase.class, "sqlData").allowMainThreadQueries().build();
+        //database = Room.databaseBuilder(this,TodocDatabase.class, "sqlData").build();
+        database = TodocDatabase.getInstance(this);
         database.taskDao().getAll().observe(this, new Observer<List<Task>>() {
             @Override
             public void onChanged(@Nullable List<Task> t) {
@@ -184,9 +186,16 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
 
     @Override
     public void onDeleteTask(Task task) {
-        tasks.remove(task);
+        //tasks.remove(task);
         // Delete after deleting
-        database.taskDao().deleteItem(task.getId());
+        final Task finalTask = task;
+        Executors.newSingleThreadScheduledExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                database.taskDao().deleteItem(finalTask.getId());
+            }
+        });
+
         updateTasks();
     }
     public Project[] getProjects(){
@@ -230,8 +239,18 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
                 // Save the task after adding task
                 /*Project PROJECT_DEMO = new Project(taskProject.getId(), "Projet Tartampion", 0xFFEADAD1);
                 Task NEW_TASK_1 = new Task(1, taskProject.getId(), "tache1", new Date().getTime());*/
-                database.projectDao().createProject(taskProject);
-                database.taskDao().insertTask(task);
+                final Project finalTaskProject = taskProject;
+                final Task finalTask = task;
+                Executors.newSingleThreadScheduledExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        database.projectDao().createProject(finalTaskProject);
+                        database.taskDao().insertTask(finalTask);
+                    }
+                });
+                //database.projectDao().createProject(taskProject);
+                //database.taskDao().insertTask(task);
+                //database.insertTaskDao(task);
 
                 dialogInterface.dismiss();
             }

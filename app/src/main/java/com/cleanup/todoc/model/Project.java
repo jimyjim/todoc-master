@@ -9,6 +9,7 @@ import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.cleanup.todoc.database.TodocDatabase;
 import com.cleanup.todoc.ui.MainActivity;
@@ -56,11 +57,13 @@ public class Project {
      *
      * @return all the projects of the application
      */
-    @NonNull
+    /*@NonNull
     public static final Project[] getAllProjects() {
         MainActivity activity = new MainActivity();
+        Project[] p = activity.getProjects();
+        //Log.e("TAG", "erreur");
         return activity.getProjects();
-    }
+    }*/
 
     /**
      * Returns the project with the given unique identifier, or null if no project with that
@@ -69,14 +72,14 @@ public class Project {
      * @param id the unique identifier of the project to return
      * @return the project with the given unique identifier, or null if it has not been found
      */
-    @Nullable
+    /*@Nullable
     public static final Project getProjectById(long id) {
         for (Project project : getAllProjects()) {
             if (project.id == id)
                 return project;
         }
         return null;
-    }
+    }*/
 
     /**
      * Returns the unique identifier of the project.
